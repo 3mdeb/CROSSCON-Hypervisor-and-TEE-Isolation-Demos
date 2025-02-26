@@ -509,6 +509,15 @@ After Linux finishes booting run xtest as follows:
 xtest -t regression
 ```
 
+If you want to, you can enable internet access with this command:
+
+```sh
+udhcpc -i eth0
+```
+
+This will allow you to access the internet (make sure that the ethernet cable
+is plugged in).
+
 ### Demo 2
 This demo instantiates a Linux VM and two OP-TEE VMs.
 ``` sh
