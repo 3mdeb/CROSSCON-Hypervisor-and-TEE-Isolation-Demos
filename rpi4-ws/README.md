@@ -414,7 +414,43 @@ cd $ROOT
 ```
 ![COMPlinuxkernel](./img/.gif/COMPmalicious.gif)
 
-## Step 7: Finalize Linux file system
+## Step 7: Build Security Test Client and Trusted Application
+
+```sh
+cd "$ROOT/security_test"
+
+#!/bin/bash
+
+set -e
+
+BUILDROOT="$PWD/../buildroot/build-aarch64/"
+
+export CROSS_COMPILE=$BUILDROOT/host/bin/aarch64-linux-
+export HOST_CROSS_COMPILE=$BUILDROOT/host/bin/aarch64-linux-
+export TA_CROSS_COMPILE=$BUILDROOT/host/bin/aarch64-linux-
+export ARCH=aarch64
+export PLATFORM=plat-virt
+export TA_DEV_KIT_DIR="$PWD/../optee_os/optee-rpi4/export-ta_arm64"
+export TEEC_EXPORT="$PWD/../optee_client/out-aarch64/export/usr/"
+export OPTEE_CLIENT_EXPORT="$PWD/../optee_client/out-aarch64/export/usr/"
+export CFG_TA_OPTEE_CORE_API_COMPAT_1_1=n
+export DESTDIR=./to_buildroot-aarch64
+export DEBUG=0
+export CFG_TEE_TA_LOG_LEVEL=2
+export O="$PWD/out-aarch64"
+rm -rf out-aarch64/
+
+make -j "$(nproc)"
+
+mkdir -p to_buildroot-aarch64/lib/optee_armtz
+mkdir -p to_buildroot-aarch64/bin
+
+cp out-aarch64/*.ta to_buildroot-aarch64/lib/optee_armtz
+cp host/security_test to_buildroot-aarch64/bin/security_test
+chmod +x to_buildroot-aarch64/bin/security_test
+```
+
+## Step 8: Finalize Linux file system
 We have everything setup now, so build the final file system for Linux.
 ```sh
 cd buildroot
@@ -425,7 +461,7 @@ cd $ROOT
 ```
 ![COMPlinuxfinal](./img/.gif/COMPlinuxfinal.gif)
 
-## Step 8: Build Linux
+## Step 9: Build Linux
 
 Set our predefined `.config` files:
 ``` sh
@@ -442,7 +478,8 @@ cd $ROOT
 ![COMPlinuxkernel](./img/.gif/COMPlinuxkernel.gif)
 
 ---
-### Step 9: Bind Linux Image and device tree
+
+### Step 10: Bind Linux Image and device tree
 
 ```sh
 dtc -I dts -O dtb rpi4-ws/rpi4.dts > rpi4-ws/rpi4.dtb
