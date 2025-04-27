@@ -25,6 +25,14 @@ struct vm_config linux = {
                 .phys = 0x20000000
             }
         },
+        .ipc_num = 1,
+        .ipcs = (struct ipc[]) {
+            {
+                .base = 0x08000000,
+                .size = 0x00200000,
+                .shmem_id = 0,
+            },
+        },
         .dev_num = 4,
         .devs =  (struct dev_region[]) {
             {
@@ -47,8 +55,11 @@ struct vm_config linux = {
             },
             {
                 /* Arch timer interrupt */
-                .interrupt_num = 1,
-                .interrupts = (irqid_t[]) {27}
+                .interrupt_num = 5,
+                .interrupts = (irqid_t[]) {
+                    27,
+                    0x10 + 32, 0x11 + 32, 0x12 + 32, 0x13 + 32, // PMU
+                }
             }
         },
         .arch = {
@@ -62,6 +73,10 @@ struct vm_config linux = {
 
 struct config config = {
     CONFIG_HEADER
+    .shmemlist_size = 1,
+    .shmemlist = (struct shmem[]) {
+        [0] = { .size = 0x00200000, },
+    },
     .vmlist_size = 1,
     .vmlist = {
         &linux

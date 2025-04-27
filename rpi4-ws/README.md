@@ -447,40 +447,21 @@ cd $ROOT
 
 ![COMPlinuxkernel](./img/.gif/COMPmalicious.gif)
 
-## Step 7: Build Security Test Client and Trusted Application
+## Step 7: Build Security Test
 
 ```sh
 cd "$ROOT/security_test"
 
-#!/bin/bash
-
-set -e
-
-BUILDROOT="$PWD/../buildroot/build-aarch64/"
-
+BUILDROOT=$ROOT/buildroot/build-aarch64
 export CROSS_COMPILE=$BUILDROOT/host/bin/aarch64-linux-
-export HOST_CROSS_COMPILE=$BUILDROOT/host/bin/aarch64-linux-
-export TA_CROSS_COMPILE=$BUILDROOT/host/bin/aarch64-linux-
-export ARCH=aarch64
-export PLATFORM=plat-virt
-export TA_DEV_KIT_DIR="$PWD/../optee_os/optee-rpi4/export-ta_arm64"
-export TEEC_EXPORT="$PWD/../optee_client/out-aarch64/export/usr/"
-export OPTEE_CLIENT_EXPORT="$PWD/../optee_client/out-aarch64/export/usr/"
-export CFG_TA_OPTEE_CORE_API_COMPAT_1_1=n
 export DESTDIR=./to_buildroot-aarch64
-export DEBUG=0
-export CFG_TEE_TA_LOG_LEVEL=2
-export O="$PWD/out-aarch64"
-rm -rf out-aarch64/
+export O=$PWD/out-aarch64
+export TIME_SOURCE=perf
+export ARCH=armv8
+export DEVICE_CONFIGURATION=rpi4
 
-make -j "$(nproc)"
-
-mkdir -p to_buildroot-aarch64/lib/optee_armtz
-mkdir -p to_buildroot-aarch64/bin
-
-cp out-aarch64/*.ta to_buildroot-aarch64/lib/optee_armtz
-cp host/security_test to_buildroot-aarch64/bin/security_test
-chmod +x to_buildroot-aarch64/bin/security_test
+cp "files/${DEVICE_CONFIGURATION}.h" armageddon/libflush/eviction/strategies/
+make -j"$(nproc)"
 ```
 
 ## Step 8: Finalize Linux file system
