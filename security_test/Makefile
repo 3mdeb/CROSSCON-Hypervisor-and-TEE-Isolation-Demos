@@ -17,7 +17,7 @@ LIBFLUSH		= $(ARMAGEDDON)/libflush
 HAVE_PAGEMAP_ACCESS ?= 1
 
 DEVICE_CONFIGURATION	?= rpi4
-PERF					?= 1
+PERF					?= 0
 IPC_ID					?= 0
 
 ifneq ($(USE_EVICTION),)

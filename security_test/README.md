@@ -24,7 +24,8 @@ make
 
 Additional configuration:
 
-* PERF - set to 1 (default) to use `perf_event_open` to get cache miss rate
+* PERF - set to 1 to use `perf_event_open` to get cache miss rate. Might not
+  work on hypervisor.
 * IPC_ID - ID of IPC shared memory: `/dev/crossconhypipc<ID>`
 * TIME_SOURCE - possible values: `register`, `perf`, `monotonic_clock`,
   `thread_counter` with `register` being most accurate but requires access to
@@ -35,7 +36,13 @@ Additional configuration:
 1. In VM 1 run
 
     ```sh
-    cache_test time 0
+    $ cache_test time 0
+    Opening /dev/crossconhypipc0
+    mmaping /dev/crossconhypipc0
+    Libflush init
+    Calculating median baseline. Don't evict.
+    Calculated median time: 498
+    Median time diff from baseline:  34
     ```
 
     Program should display median time to access all passed cache lines.

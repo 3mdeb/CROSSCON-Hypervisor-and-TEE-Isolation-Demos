@@ -31,6 +31,8 @@ struct vm_config linux = {
                 .base = 0x08000000,
                 .size = 0x00200000,
                 .shmem_id = 0,
+                .interrupt_num = 1,
+                .interrupts = (irqid_t[]) { 0x14 + 32 },
             },
         },
         .dev_num = 4,
@@ -55,10 +57,10 @@ struct vm_config linux = {
             },
             {
                 /* Arch timer interrupt */
-                .interrupt_num = 5,
+                .interrupt_num = 2,
                 .interrupts = (irqid_t[]) {
                     27,
-                    0x10 + 32, 0x11 + 32, 0x12 + 32, 0x13 + 32, // PMU
+                    0x10 + 32, // PMU
                 }
             }
         },
@@ -102,6 +104,8 @@ struct vm_config linux2 = {
                 .base = 0x08000000,
                 .size = 0x00200000,
                 .shmem_id = 0,
+                .interrupt_num = 1,
+                .interrupts = (irqid_t[]) { 0x14 + 32 },
             },
         },
         .dev_num = 4,
@@ -120,10 +124,10 @@ struct vm_config linux2 = {
             },
             {
                 /* Arch timer interrupt */
-                .interrupt_num = 5,
+                .interrupt_num = 2,
                 .interrupts = (irqid_t[]) {
                     27,
-                    0x15 + 32, 0x16 + 32, 0x17 + 32, 0x18 + 32, // PMU
+                    0x15 + 32, // PMU
                 }
             }
         },
