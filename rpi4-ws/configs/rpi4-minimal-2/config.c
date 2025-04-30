@@ -11,6 +11,7 @@ struct vm_config linux = {
         .size = VM_IMAGE_SIZE(linux_image),
     },
     .entry = 0x20200000,
+    // .colors = 0x55555555,
 
     .type = 0,
 
@@ -20,9 +21,7 @@ struct vm_config linux = {
         .regions =  (struct mem_region[]) {
             {
                 .base = 0x20000000,
-                .size = 0x40000000,
-                .place_phys = true,
-                .phys = 0x20000000
+                .size = 0x38000000,
             }
         },
         .ipc_num = 1,
@@ -84,6 +83,7 @@ struct vm_config linux2 = {
         .size = VM_IMAGE_SIZE(linux_image2),
     },
     .entry = 0x20200000,
+    // .colors = 0xAAAAAAAA,
 
     .type = 0,
 
@@ -93,9 +93,7 @@ struct vm_config linux2 = {
         .regions =  (struct mem_region[]) {
             {
                 .base = 0x20000000,
-                .size = 0x40000000,
-                .place_phys = true,
-                .phys = 0x40000000
+                .size = 0x38000000,
             }
         },
         .ipc_num = 1,
@@ -108,7 +106,7 @@ struct vm_config linux2 = {
                 .interrupts = (irqid_t[]) { 0x14 + 32 },
             },
         },
-        .dev_num = 3,
+        .dev_num = 4,
         .devs =  (struct dev_region[]) {
             {
                 .pa   = 0xfc000000,
@@ -120,6 +118,10 @@ struct vm_config linux2 = {
                 .pa   = 0x600000000,
                 .va   = 0x600000000,
                 .size = 0x200000000,
+            },
+            {
+                .interrupt_num = 1,
+                .interrupts = (irqid_t[]) { 0x79 + 32 } // serial
             },
             {
                 /* Arch timer interrupt */
@@ -143,7 +145,7 @@ struct config config = {
     CONFIG_HEADER
     .shmemlist_size = 1,
     .shmemlist = (struct shmem[]) {
-        [0] = { .size = 0x00200000, },
+        [0] = {.size = 0x00200000,},
     },
     .vmlist_size = 2,
     .vmlist = {

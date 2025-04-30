@@ -10,11 +10,12 @@
 
 	aliases {
 		serial1 = "/soc/serial@7e215040";
+		serial3 = "/soc/serial@7e201600";
 	};
 
 	chosen {
-		stdout-path = "serial1:115200n8";
-		bootargs = "earlycon clk_ignore_unused ip=192.168.42.15 carrier_timeout=0";
+		stdout-path = "serial3:115200n8";
+		bootargs = "clk_ignore_unused ip=192.168.42.15 carrier_timeout=0 console=ttyAMA3,115200 console=ttyAMA3,115200";
 	};
 
 	reserved-memory {
@@ -81,7 +82,7 @@
 			clock-frequency = <0xf4240>;
 		};
 
-		cprman@7e101000 {
+		cprman: cprman@7e101000 {
 			compatible = "brcm,bcm2711-cprman";
 			#clock-cells = <0x01>;
 			reg = <0x7e101000 0x2000>;
@@ -234,6 +235,12 @@
 				brcm,function = <0x02>;
 			};
 
+			uart3_gpio: uart3_gpio4 {
+				brcm,pull = <0x00 0x02>;
+				brcm,function = <0x03>;
+				brcm,pins = <0x04 0x05>;
+			};
+
 			gpclk0_gpio49 {
 
 				pin-gpclk {
@@ -293,9 +300,21 @@
 			reg = <0x7e215040 0x40>;
 			interrupts = <0x00 0x5d 0x04>;
 			clocks = <0x0c 0x00>;
-			status = "okay";
+			status = "disabled";
 			pinctrl-names = "default";
 			pinctrl-0 = <0x0d>;
+		};
+
+		serial@7e201600 {
+			compatible = "arm,pl011\0arm,primecell";
+			reg = <0x7e201600 0x200>;
+			interrupts = <0x00 0x79 0x04>;
+			clocks = <&cprman 0x13 &cprman 0x14>;
+			clock-names = "uartclk\0apb_pclk";
+			arm,primecell-periphid = <0x241011>;
+			status = "okay";
+			pinctrl-names = "default";
+			pinctrl-0 = <&uart3_gpio>;
 		};
 
 		local_intc@40000000 {
@@ -440,7 +459,7 @@
 	};
 
 	memory@20000000 {
-		reg = <0x00 0x20000000 0x40000000>;
+		reg = <0x00 0x20000000 0x20000000>;
 		device_type = "memory";
 	};
 
