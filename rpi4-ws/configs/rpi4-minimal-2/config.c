@@ -108,7 +108,7 @@ struct vm_config linux2 = {
                 .interrupts = (irqid_t[]) { 0x14 + 32 },
             },
         },
-        .dev_num = 4,
+        .dev_num = 3,
         .devs =  (struct dev_region[]) {
             {
                 .pa   = 0xfc000000,
@@ -120,7 +120,6 @@ struct vm_config linux2 = {
                 .pa   = 0x600000000,
                 .va   = 0x600000000,
                 .size = 0x200000000,
-
             },
             {
                 /* Arch timer interrupt */
