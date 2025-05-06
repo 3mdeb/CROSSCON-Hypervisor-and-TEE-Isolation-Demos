@@ -12,9 +12,7 @@
 #include <string.h>
 #include <sys/mman.h>
 #include <libflush/libflush.h>
-#include <linux/perf_event.h>
 #include <asm/unistd.h>
-#include <sys/ioctl.h>
 
 #define MMAP_SIZE 0x2000
 #define EVICT_ACCESS_USLEEP 500
@@ -37,10 +35,6 @@ struct Params {
 struct ProgramData {
     int ipc_fd;
     void *ipc_mmap;
-#if PERF == 1
-    int perf_fd;
-    int perf_ref_fd;
-#endif
 } data;
 
 // Moves cursor to beginning of the previous line
@@ -71,12 +65,6 @@ void push(void *arr, size_t count, size_t el_size, void *element);
 int cmp_uint64(const void* a, const void* b);
 int add_element_get_median(uint64_t *timings, uint64_t new_time);
 
-long perf_event_open(struct perf_event_attr *hw_event, pid_t pid,
-                     int cpu, int group_fd, unsigned long flags)
-{
-    return syscall(__NR_perf_event_open, hw_event, pid, cpu, group_fd, flags);
-}
-
 int main(int argc, char **argv) {
     signal(SIGINT, intHandler);
     if (parse_params(argc, argv)) {
@@ -89,12 +77,6 @@ int main(int argc, char **argv) {
     uint64_t timings[TIMING_SAMPLES] = { 0 };
     uint64_t median_baseline = 0;
     uint64_t median = 0;
-#if PERF == 1
-    long long cache_hit_miss = 0;
-    long long cache_hit_miss_total = 0;
-    long long cache_access = 0;
-    long long cache_access_total = 0;
-#endif
 
     if (params.op == TIME) {
         printf("Calculating median baseline. Don't evict.\n");
@@ -111,34 +93,12 @@ int main(int argc, char **argv) {
                 usleep(EVICT_ACCESS_USLEEP);
                 break;
             case TIME:
-            #if PERF == 1
-                ioctl(data.perf_fd, PERF_EVENT_IOC_RESET, 0);
-                ioctl(data.perf_ref_fd, PERF_EVENT_IOC_RESET, 0);
-                ioctl(data.perf_fd, PERF_EVENT_IOC_ENABLE, 0);
-                ioctl(data.perf_ref_fd, PERF_EVENT_IOC_ENABLE, 0);
-            #endif
                 uint64_t time = time_access(data.ipc_mmap);
-            #if PERF == 1
-                ioctl(data.perf_ref_fd, PERF_EVENT_IOC_DISABLE, 0);
-                ioctl(data.perf_fd, PERF_EVENT_IOC_DISABLE, 0);
-                read(data.perf_fd, &cache_hit_miss, sizeof(long long));
-                read(data.perf_ref_fd, &cache_access, sizeof(long long));
-                cache_hit_miss_total += cache_hit_miss;
-                cache_access_total += cache_access;
-            #endif
                 median = add_element_get_median(timings, time);
-            #if PERF == 1
-                    printf(CPL);
-            #endif
                 if (median > median_baseline)
                     printf("\rMedian time diff from baseline:  %lu    ", median - median_baseline);
                 else
                     printf("\rMedian time diff from baseline: -%lu    ", median_baseline - median);
-            #if PERF == 1
-                    printf("\nCache misses: %llu (%.2f%%)    ",
-                        cache_access_total - cache_hit_miss_total,
-                        (float)cache_access_total/cache_hit_miss_total);
-            #endif
                 usleep(TIME_RELOAD_USLEEP);
                 break;
             case ACCESS:
@@ -205,39 +165,6 @@ int prepare() {
 		return -1;
 	}
 
-#if PERF == 1
-    // we don't need perf for these operations
-    if (params.op == EVICT || params.op == ACCESS)
-        return 0;
-    struct perf_event_attr pe;
-
-    memset(&pe, 0, sizeof(struct perf_event_attr));
-    /** if it doesn't work on rpi:
-     * type=PERF_TYPE_HARDWARE,
-     * config=PERF_COUNT_HW_CACHE_MISSES
-     */
-    pe.type = PERF_TYPE_HW_CACHE;
-    pe.size = sizeof(struct perf_event_attr);
-    pe.config = (PERF_COUNT_HW_CACHE_LL) | (PERF_COUNT_HW_CACHE_OP_READ << 8) | (PERF_COUNT_HW_CACHE_RESULT_MISS << 16);
-    pe.disabled = 1;
-    pe.exclude_idle = 1;
-    pe.exclude_guest = 1;
-    pe.exclude_kernel = 1;
-    pe.exclude_hv = 1;
-
-    data.perf_fd = perf_event_open(&pe, 0, -1, -1, 0);
-    if (data.perf_fd == -1) {
-        perror("perf_event_open failed");
-        return -1;
-    }
-    pe.config = (PERF_COUNT_HW_CACHE_LL) | (PERF_COUNT_HW_CACHE_OP_READ << 8) | (PERF_COUNT_HW_CACHE_RESULT_ACCESS << 16);
-    data.perf_ref_fd = perf_event_open(&pe, 0, -1, -1, 0);
-    if (data.perf_ref_fd == -1) {
-        perror("perf_event_open failed");
-        return -1;
-    }
-#endif
-
     return 0;
 }
 
@@ -245,12 +172,6 @@ void cleanup() {
     free(params.cache_lines);
     munmap(data.ipc_mmap, MMAP_SIZE);
     close(data.ipc_fd);
-#if PERF == 1
-    if(params.op != EVICT && params.op != ACCESS) {
-        close(data.perf_fd);
-        close(data.perf_ref_fd);
-    }
-#endif
     if (libflush_terminate(libflush_session) == false) {
 		fprintf(stderr, "libflush_terminate failed\n");
 	}

@@ -24,8 +24,6 @@ make
 
 Additional configuration:
 
-* PERF - set to 1 to use `perf_event_open` to get cache miss rate. Might not
-  work on hypervisor.
 * IPC_ID - ID of IPC shared memory: `/dev/crossconhypipc<ID>`
 * TIME_SOURCE - possible values: `register`, `perf`, `monotonic_clock`,
   `thread_counter` with `register` being most accurate but requires access to
@@ -67,7 +65,6 @@ Additional configuration:
     This should evict 0th cache line which is accessed by VM 1.
     You should see timing difference reported by VM 1 if cache coloring is
     disabled.
-
 
 You should be able to run this test on only 1 VM but cache coloring won't help
 in this case.
