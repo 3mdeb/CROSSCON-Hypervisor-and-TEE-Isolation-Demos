@@ -14,16 +14,13 @@
 #include <libflush/libflush.h>
 #include <asm/unistd.h>
 
-#define MMAP_SIZE 0x2000
 #define EVICT_ACCESS_USLEEP 500
 #define TIME_RELOAD_USLEEP EVICT_ACCESS_USLEEP*3.33
 #define TIMING_SAMPLES 500
 
 enum OP {
     EVICT,  // evict cache lines each EVICT_USLEEP us
-    TIME,   // time accesses each EVICT_USLEEP*5
-    ACCESS, // access cache lines each EVICT_USLEEP us
-    FLUSH_RELOAD, // flush, wait EVICT_USLEEP*5 and time reload
+    TIME,   // time accesses each TIME_RELOAD_USLEEP us
 };
 
 struct Params {
@@ -43,27 +40,33 @@ static volatile atomic_bool stop = false;
 libflush_session_t* libflush_session;
 uint8_t dummy_value;
 
-/** parse params and save them to 'params' global struct */
+/** Parse params and save them to 'params' global struct */
 int parse_params(int argc, char **argv);
 /**
- * prepare program, open file descriptors, mmap them and save them in 'data'
+ * Prepare program, open file descriptors, mmap them and save them in 'data'
  * global struct
  */
 int prepare();
+/** Close file descriptors, free allocated memory, etc. */
 void cleanup();
 /**
- * evict/flush all cache lines in params.cache_lines.
+ * Evict/flush all cache lines in params.cache_lines.
  * Cache line <n> == addr[n*LINE_LENGTH]
  */
 void evict_lines(uint8_t *addr);
-/** Access all cache lines in params.cache_lines */
-void access_lines(volatile uint8_t *addr);
+/**
+ * Access all cache lines in params.cache_lines and return how long it took
+ * Cache line <n> == addr[n*LINE_LENGTH]
+ */
 uint64_t time_access(volatile uint8_t *addr);
+/** Handle CTRL+C */
 void intHandler(int dummy);
-/** push new element to the top of array, remove last */
+/** Push new element to the top of array, remove last */
 void push(void *arr, size_t count, size_t el_size, void *element);
+/** Compare 2 uin64_t values */
 int cmp_uint64(const void* a, const void* b);
-int add_element_get_median(uint64_t *timings, uint64_t new_time);
+/** Push new_time to timings array and then return median value */
+uint64_t add_element_get_median(uint64_t *timings, uint64_t new_time);
 
 int main(int argc, char **argv) {
     signal(SIGINT, intHandler);
@@ -101,16 +104,11 @@ int main(int argc, char **argv) {
                     printf("\rMedian time diff from baseline: -%lu    ", median_baseline - median);
                 usleep(TIME_RELOAD_USLEEP);
                 break;
-            case ACCESS:
-                access_lines(data.ipc_mmap);
-                usleep(EVICT_ACCESS_USLEEP);
-                break;
-            case FLUSH_RELOAD:
-                break;
         }
     }
 
     printf("\nStopping\n");
+    cleanup();
     printf("Dummy value: %u\n", (unsigned int)dummy_value);
     return 0;
 }
@@ -183,13 +181,6 @@ void evict_lines(uint8_t *addr) {
     }
 }
 
-void access_lines(volatile uint8_t *addr) {
-    for (int i=0; i<params.count; i++) {
-        dummy_value ^= *(addr + params.cache_lines[i]*LINE_LENGTH);
-        // libflush_access_memory(addr + params.cache_lines[i]*LINE_LENGTH);
-    }
-}
-
 uint64_t time_access(volatile uint8_t *addr) {
     libflush_memory_barrier();
     uint64_t time = libflush_get_timing(libflush_session);
@@ -218,7 +209,7 @@ int cmp_uint64(const void* a, const void* b)
 	return (arg1 > arg2) - (arg1 < arg2);
 }
 
-int add_element_get_median(uint64_t *timings, uint64_t new_time) {
+uint64_t add_element_get_median(uint64_t *timings, uint64_t new_time) {
     uint64_t timings_sorted[TIMING_SAMPLES];
     push(timings, TIMING_SAMPLES, sizeof(new_time), &new_time);
     memcpy(timings_sorted, timings, TIMING_SAMPLES*sizeof(new_time));

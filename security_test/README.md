@@ -18,16 +18,21 @@ export O=$PWD/out-aarch64
 export TIME_SOURCE=perf
 export ARCH=armv8
 export DEVICE_CONFIGURATION=rpi4
+export IPC_ID=0
+export SHMEM_SIZE=0x1000
 
 make
 ```
 
 Additional configuration:
 
-* IPC_ID - ID of IPC shared memory: `/dev/crossconhypipc<ID>`
+* IPC_ID - ID of IPC shared memory: `/dev/crossconhypipc<ID>`, default value is
+  0.
 * TIME_SOURCE - possible values: `register`, `perf`, `monotonic_clock`,
   `thread_counter` with `register` being most accurate but requires access to
-  specific registers e.g. `PMCCNTR_EL0` for ARMv8
+  specific registers e.g. `PMCCNTR_EL0` for ARMv8.
+* SHMEM_SIZE - size of shared memory with ID `<IPC_ID>`. Default value is
+  0x1000. Can be smaller than real size.
 
 ## Run
 

@@ -2,7 +2,8 @@ CC				= $(CROSS_COMPILE)gcc
 
 CFLAGS			?= -Wall -I $(LIBFLUSH) \
 				   -DDEVICE_CONFIGURATION=\"libflush/eviction/strategies/$(DEVICE_CONFIGURATION).h\" \
-				   -DIPC_ID=\"$(IPC_ID)\"
+				   -DIPC_ID=\"$(IPC_ID)\" \
+				   -DMMAP_SIZE=$(SHMEM_SIZE)
 ifeq ($(DEBUG), 1)
 CFLAGS			+= -g -Og
 endif
@@ -17,6 +18,7 @@ HAVE_PAGEMAP_ACCESS ?= 1
 
 DEVICE_CONFIGURATION	?= rpi4
 IPC_ID					?= 0
+SHMEM_SIZE				?= 0x1000
 
 ifneq ($(USE_EVICTION),)
 export USE_EVICTION

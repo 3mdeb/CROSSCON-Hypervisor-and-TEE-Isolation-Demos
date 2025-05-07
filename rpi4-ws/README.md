@@ -459,8 +459,11 @@ export O=$PWD/out-aarch64
 export TIME_SOURCE=perf
 export ARCH=armv8
 export DEVICE_CONFIGURATION=rpi4
+export IPC_ID=0
+export SHMEM_SIZE=0x1000
 
-cp "files/${DEVICE_CONFIGURATION}.h" armageddon/libflush/eviction/strategies/
+cp "files/${DEVICE_CONFIGURATION}.h" armageddon/libflush/libflush/eviction/strategies/
+make clean || true
 make -j"$(nproc)"
 ```
 
