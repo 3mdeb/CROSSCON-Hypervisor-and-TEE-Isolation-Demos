@@ -11,7 +11,7 @@ struct vm_config linux = {
         .size = VM_IMAGE_SIZE(linux_image),
     },
     .entry = 0x20200000,
-    // .colors = 0x55555555,
+    .colors = 0x1,
 
     .type = 0,
 
@@ -83,7 +83,7 @@ struct vm_config linux2 = {
         .size = VM_IMAGE_SIZE(linux_image2),
     },
     .entry = 0x20200000,
-    // .colors = 0xAAAAAAAA,
+    .colors = 0x2,
 
     .type = 0,
 
@@ -145,7 +145,7 @@ struct config config = {
     CONFIG_HEADER
     .shmemlist_size = 1,
     .shmemlist = (struct shmem[]) {
-        [0] = {.size = 0x00200000,},
+        [0] = {.size = 0x00200000, .colors=0x4},
     },
     .vmlist_size = 2,
     .vmlist = {
