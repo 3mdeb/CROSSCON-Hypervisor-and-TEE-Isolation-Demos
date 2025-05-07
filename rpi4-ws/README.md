@@ -588,3 +588,47 @@ After Linux finishes booting you may execute xtest in both OP-TEE VMs.
 xtest -t regression
 xtest2 -t regression
 ```
+
+### Security test
+
+* Build security test demo:
+
+    ```sh
+    ./build.demo-security_test.sh
+    ```
+
+    And copy
+    `CROSSCON-Hypervisor/bin/rpi4/builtin-configs/rpi4-single-vTEE/crossconhyp.bin`
+    to SD card.
+
+* Connect second UART to RPI4. Board configuration:
+    - [GPIO 4](https://pinout.xyz/pinout/pin7_gpio4/) - UART TX
+    - [GPIO 5](https://pinout.xyz/pinout/pin29_gpio5/) - UART RX
+
+* Boot normally, after a while you should see output on both `ttyUSB0` and
+  `ttyUSB1`
+
+* Run in 1st VM
+
+    ```sh
+    $ cache_test time 0
+    Opening /dev/crossconhypipc0
+    mmaping /dev/crossconhypipc0
+    Libflush init
+    Calculating median baseline. Don't evict.
+    Calculated median time: 531
+    Median time diff from baseline:  31
+    ```
+
+* Run in 2nd VM
+
+    ```sh
+    $ cache_test evict 0
+    Opening /dev/crossconhypipc0
+    mmaping /dev/crossconhypipc0
+    Libflush init
+    ```
+
+After running `cache_test evict 0` you should see `median time diff` in 1st VM
+increase by around 100 if cache coloring is disabled (or it doesn't work) and no
+change at all if it's enabled and working as intended.
