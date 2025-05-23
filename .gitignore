@@ -64,3 +64,6 @@ rpi4-ws/arm-trusted-firmware/
 rpi4-ws/firmware/
 rpi4-ws/u-boot/
 
+
+# don't ignore scripts
+!*.sh

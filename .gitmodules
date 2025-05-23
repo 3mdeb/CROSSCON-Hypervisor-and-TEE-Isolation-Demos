@@ -1,6 +1,6 @@
 [submodule "CROSSCON-Hypervisor"]
 	path = CROSSCON-Hypervisor
-	url = git@github.com:crosscon/CROSSCON-Hypervisor.git
+	url = https://github.com/3mdeb/CROSSCON-Hypervisor
 [submodule "optee_client"]
 	path = optee_client
 	url = git@github.com:crosscon/optee_client.git
@@ -19,3 +19,7 @@
 [submodule "bitcoin-wallet"]
 	path = bitcoin-wallet
 	url = git@github.com:crosscon/bitcoin-wallet.git
+[submodule "security_test/armageddon"]
+	path = security_test/armageddon
+	url = https://github.com/isec-tugraz/armageddon.git
+	ignore = dirty

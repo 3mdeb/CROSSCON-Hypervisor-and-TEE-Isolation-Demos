@@ -7,9 +7,10 @@ STEP_3_NAME="3: Build OP-TEE Clients"
 STEP_4_NAME="4: Build OP-TEE xtest"
 STEP_5_NAME="5: Compile Bitcoin wallet UA an TA"
 STEP_6_NAME="6: Compile Malicious UA and TA"
-STEP_7_NAME="7: Finalize Linux file system"
-STEP_8_NAME="8: Build linux"
-STEP_9_NAME="9: Bind Linux image and device tree"
+STEP_7_NAME="7: Compile Cache Coloring tests"
+STEP_7_NAME="8: Finalize Linux file system"
+STEP_8_NAME="9: Build linux"
+STEP_9_NAME="10: Bind Linux image and device tree"
 
 ROOT=$(git -C "$(dirname "$(realpath $0)")" rev-parse --show-toplevel)
 
@@ -21,7 +22,7 @@ LINUX_CONF_PATH="support/linux-aarch64.config"
 
 print_usage() {
   echo "Available steps:"
-  for i in {0..9}; do
+  for i in {0..10}; do
     step_name_var="STEP_${i}_NAME"
     echo "  $i - ${!step_name_var}"
   done
@@ -377,6 +378,24 @@ step_6() {
 }
 
 step_7() {
+    cd "$ROOT/security_test"
+
+    BUILDROOT=$ROOT/buildroot/build-aarch64
+    export CROSS_COMPILE=$BUILDROOT/host/bin/aarch64-linux-
+    export DESTDIR=./to_buildroot-aarch64
+    export O=$PWD/out-aarch64
+    export TIME_SOURCE=perf
+    export ARCH=armv8
+    export DEVICE_CONFIGURATION=rpi4
+    export LLC_SIZE=0x100000
+    unset CFLAGS
+
+    cp "files/${DEVICE_CONFIGURATION}.h" armageddon/libflush/libflush/eviction/strategies/
+    make clean || true
+    make -j"$(nproc)"
+}
+
+step_8() {
     cd "$ROOT"
 
     # Call extra step to copy ".TA" files
@@ -389,7 +408,7 @@ step_7() {
     cd $ROOT
 }
 
-step_8() {
+step_9() {
     cd "$ROOT"
 
     mkdir -p linux/build-aarch64/
@@ -402,7 +421,7 @@ step_8() {
     cd $ROOT
 }
 
-step_9() {
+step_10() {
     cd "$ROOT"
 
     dtc -I dts -O dtb rpi4-ws/rpi4.dts > rpi4-ws/rpi4.dtb
