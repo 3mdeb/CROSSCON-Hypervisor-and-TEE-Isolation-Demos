@@ -4,6 +4,7 @@ IMAGE=crosscon-demo-img.img
 MOUNT_DIR=/media/root/boot
 ROOT=$(git -C "$(dirname "$(realpath $0)")" rev-parse --show-toplevel)
 CONFIG_REPO="$ROOT/rpi4-ws/configs"
+CONFIG_NAME="rpi4-single-vTEE"
 C_PATH="/work/gcc-arm-11.2-2022.02-x86_64-aarch64-none-elf/bin:/work/gcc-arm-11.2-2022.02-x86_64-aarch64-none-linux-gnu/bin:$PATH"
 
 # Function to clean up if script fails
@@ -15,14 +16,30 @@ cleanup() {
     exit 1
 }
 
-# Ensure cleanup happens if any command fails
-trap cleanup ERR
-
-# Change dir to root
-cd $ROOT
 
 # Exit on failure
 set -e
+
+# Ensure cleanup happens if any command fails
+trap cleanup ERR
+
+# Parse args
+for arg in "$@"; do
+    case $arg in
+        --config=*)
+            CONFIG_NAME="${arg#*=}"
+            shift
+            ;;
+        *)
+            echo "Usage: $0 [--config=<config-name>]"
+            echo "       Default config: rpi4-single-vTEE"
+            exit 1
+            ;;
+    esac
+done
+
+# Change dir to root
+cd $ROOT
 
 echo "# Creating empty image"
 sudo -u "$SUDO_USER" dd if=/dev/zero of="$IMAGE" bs=1M count=256
@@ -60,19 +77,19 @@ sudo -u "$SUDO_USER" env PATH=$C_PATH make -C CROSSCON-Hypervisor/ \
     PLATFORM=rpi4 \
     CONFIG_BUILTIN=y \
     CONFIG_REPO=$CONFIG_REPO \
-    CONFIG=rpi4-single-vTEE \
+    CONFIG=$CONFIG_NAME \
     OPTIMIZATIONS=0 \
     SDEES='sdSGX sdTZ' \
     CROSS_COMPILE=aarch64-none-elf- \
     clean
 
-echo "# Building hypervisor"
+echo "# Building hypervisor for $CONFIG_NAME configuration"
 # We're running this as non-root to preserve ownership
 sudo -u "$SUDO_USER" env PATH=$C_PATH make -C CROSSCON-Hypervisor/ \
     PLATFORM=rpi4 \
     CONFIG_BUILTIN=y \
     CONFIG_REPO=$CONFIG_REPO \
-    CONFIG=rpi4-single-vTEE \
+    CONFIG=$CONFIG_NAME \
     OPTIMIZATIONS=0 \
     SDEES="sdSGX sdTZ" \
     CROSS_COMPILE=aarch64-none-elf- \

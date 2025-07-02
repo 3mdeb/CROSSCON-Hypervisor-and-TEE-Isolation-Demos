@@ -57,6 +57,7 @@ dkms.conf
 *to_buildroot*
 *out*
 *build*/
+!buildroot/
 buildroot-*.gz
 *.S
 !memory-separation/boot.S

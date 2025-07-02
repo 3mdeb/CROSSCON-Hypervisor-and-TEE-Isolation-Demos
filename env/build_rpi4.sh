@@ -19,6 +19,7 @@ STEP_RANGE=""
 
 BUILDROOT_CONF_PATH="support/br-aarch64.config"
 LINUX_CONF_PATH="support/linux-aarch64.config"
+DTS_FILE="rpi4-ws/rpi4.dts"
 
 print_usage() {
   echo "Available steps:"
@@ -31,7 +32,7 @@ print_usage() {
   echo "Usage:"
   echo "  $0 --all - execute all steps."
   echo "  $0 --steps=X-Y - execute steps from X to Y (inclusive)."
-  echo "  [--buildroot_conf=PATH] [--linux_conf=PATH] - if not provided, defaults will be used."
+  echo "  [--buildroot_conf=PATH] [--linux_conf=PATH] [--dts=PATH] - if not provided, defaults will be used."
   exit 1
 }
 
@@ -179,12 +180,6 @@ step_1() {
 
 step_2() {
     cd "$ROOT"
-
-    if [ ! -e buildroot ]; then
-        wget https://buildroot.org/downloads/buildroot-2022.11.1.tar.gz
-        tar -xf buildroot-2022.11.1.tar.gz
-        mv buildroot-2022.11.1 buildroot
-    fi
 
     mkdir -p buildroot/build-aarch64
 
@@ -380,6 +375,7 @@ step_6() {
 step_7() {
     cd "$ROOT/security_test"
 
+    OLD_CFLAGS=$CFLAGS
     BUILDROOT=$ROOT/buildroot/build-aarch64
     export CROSS_COMPILE=$BUILDROOT/host/bin/aarch64-linux-
     export DESTDIR=./to_buildroot-aarch64
@@ -393,6 +389,8 @@ step_7() {
     cp "files/${DEVICE_CONFIGURATION}.h" armageddon/libflush/libflush/eviction/strategies/
     make clean || true
     make -j"$(nproc)"
+
+    export CFLAGS=$OLD_CFLAGS
 }
 
 step_8() {
@@ -424,7 +422,7 @@ step_9() {
 step_10() {
     cd "$ROOT"
 
-    dtc -I dts -O dtb rpi4-ws/rpi4.dts > rpi4-ws/rpi4.dtb
+    dtc -I dts -O dtb $DTS_FILE > rpi4-ws/rpi4.dtb
     cd lloader
 
     rm -f linux-rpi4.bin
@@ -455,6 +453,9 @@ for arg in "$@"; do
       ;;
     --linux_conf=*)
       LINUX_CONF_PATH="${arg#*=}"
+      ;;
+    --dts=*)
+      DTS_FILE="${arg#*=}"
       ;;
     *)
       echo "Unknown argument: $arg"

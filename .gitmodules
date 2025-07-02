@@ -23,3 +23,6 @@
 	path = security_test/armageddon
 	url = https://github.com/isec-tugraz/armageddon.git
 	ignore = dirty
+[submodule "buildroot"]
+	path = buildroot
+	url = https://github.com/buildroot/buildroot.git
